@@ -26,7 +26,7 @@ locals {
 
   databases = { for db in var.additional_databases : db.name => db }
   users     = { for u in var.additional_users : u.name => u }
-  iam_users = [for iu in var.iam_user_emails : {
+  iam_users = [for iu in nonsensitive(var.iam_user_emails) : {
     email         = iu,
     is_account_sa = trimsuffix(iu, "gserviceaccount.com") == iu ? false : true
   }]
@@ -205,7 +205,7 @@ resource "google_sql_user" "additional_users" {
 
 resource "google_project_iam_member" "iam_binding" {
   for_each = {
-    for iu in local.iam_users :
+    for iu in nonsensitive(local.iam_users) :
     "${iu.email} ${iu.is_account_sa}" => iu
   }
   project = var.project_id
