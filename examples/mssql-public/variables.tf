@@ -25,7 +25,8 @@ variable "name" {
   default     = "tf-mssql-public"
 }
 
-variable "region" {
-  default = "us-central1"
-  type    = string
+variable "sql_server_audit_config" {
+  description = "SQL server audit config settings."
+  type        = map(string)
+  default     = {}
 }

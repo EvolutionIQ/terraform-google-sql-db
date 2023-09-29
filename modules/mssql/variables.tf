@@ -56,6 +56,18 @@ variable "zone" {
   default     = "us-central1-a"
 }
 
+variable "secondary_zone" {
+  type        = string
+  description = "The preferred zone for the secondary/failover instance, it should be something like: `us-central1-a`, `us-east1-c`."
+  default     = null
+}
+
+variable "follow_gae_application" {
+  type        = string
+  description = "A Google App Engine application whose zone to remain in. Must be in the same region as this instance."
+  default     = null
+}
+
 variable "activation_policy" {
   description = "The activation policy for the master instance.Can be either `ALWAYS`, `NEVER` or `ON_DEMAND`."
   type        = string
@@ -68,14 +80,27 @@ variable "availability_type" {
   default     = "ZONAL"
 }
 
+variable "deletion_protection_enabled" {
+  description = "Enables protection of an instance from accidental deletion protection across all surfaces (API, gcloud, Cloud Console and Terraform)."
+  type        = bool
+  default     = false
+}
+
 variable "disk_autoresize" {
   description = "Configuration to increase storage size."
   type        = bool
   default     = true
 }
 
+variable "disk_autoresize_limit" {
+  description = "The maximum size to which storage can be auto increased."
+  type        = number
+  default     = 0
+}
+
 variable "disk_size" {
   description = "The disk size for the master instance."
+  type        = number
   default     = 10
 }
 
@@ -109,6 +134,16 @@ variable "maintenance_window_update_track" {
   default     = "canary"
 }
 
+variable "deny_maintenance_period" {
+  description = "The Deny Maintenance Period fields to prevent automatic maintenance from occurring during a 90-day time period. See [more details](https://cloud.google.com/sql/docs/sqlserver/maintenance)"
+  type = list(object({
+    end_date   = string
+    start_date = string
+    time       = string
+  }))
+  default = []
+}
+
 variable "database_flags" {
   description = "The database flags for the master instance. See [more details](https://cloud.google.com/sql/docs/sqlserver/flags)"
   type = list(object({
@@ -116,6 +151,18 @@ variable "database_flags" {
     value = string
   }))
   default = []
+}
+
+variable "active_directory_config" {
+  description = "Active domain that the SQL instance will join."
+  type        = map(string)
+  default     = {}
+}
+
+variable "sql_server_audit_config" {
+  description = "SQL server audit config settings."
+  type        = map(string)
+  default     = {}
 }
 
 variable "user_labels" {
@@ -131,12 +178,14 @@ variable "ip_configuration" {
     ipv4_enabled        = bool
     private_network     = string
     require_ssl         = bool
+    allocated_ip_range  = string
   })
   default = {
     authorized_networks = []
     ipv4_enabled        = true
     private_network     = null
     require_ssl         = null
+    allocated_ip_range  = null
   }
 }
 
@@ -203,12 +252,17 @@ variable "user_password" {
 }
 
 variable "additional_users" {
-  description = "A list of users to be created in your cluster"
+  description = "A list of users to be created in your cluster. A random password would be set for the user if the `random_password` variable is set."
   type = list(object({
-    name     = string
-    password = string
+    name            = string
+    password        = string
+    random_password = bool
   }))
   default = []
+  validation {
+    condition     = length([for user in var.additional_users : false if user.random_password == true && (user.password != null && user.password != "")]) == 0
+    error_message = "You cannot set both password and random_password, choose one of them."
+  }
 }
 
 variable "root_password" {

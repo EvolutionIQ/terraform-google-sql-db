@@ -22,10 +22,14 @@ module "safer_mysql" {
   database_version                = var.database_version
   region                          = var.region
   zone                            = var.zone
+  secondary_zone                  = var.secondary_zone
+  follow_gae_application          = var.follow_gae_application
   tier                            = var.tier
   activation_policy               = var.activation_policy
   availability_type               = var.availability_type
+  deletion_protection_enabled     = var.deletion_protection_enabled
   disk_autoresize                 = var.disk_autoresize
+  disk_autoresize_limit           = var.disk_autoresize_limit
   disk_size                       = var.disk_size
   disk_type                       = var.disk_type
   pricing_plan                    = var.pricing_plan
@@ -33,6 +37,7 @@ module "safer_mysql" {
   maintenance_window_hour         = var.maintenance_window_hour
   maintenance_window_update_track = var.maintenance_window_update_track
   database_flags                  = var.database_flags
+  deny_maintenance_period         = var.deny_maintenance_period
   encryption_key_name             = var.encryption_key_name
 
   deletion_protection = var.deletion_protection
@@ -41,6 +46,8 @@ module "safer_mysql" {
 
   backup_configuration = var.backup_configuration
 
+  insights_config = var.insights_config
+
   ip_configuration = {
     ipv4_enabled = var.assign_public_ip
     # We never set authorized networks, we need all connections via the
@@ -48,6 +55,7 @@ module "safer_mysql" {
     authorized_networks = []
     require_ssl         = true
     private_network     = var.vpc_network
+    allocated_ip_range  = var.allocated_ip_range
   }
 
   db_name      = var.db_name

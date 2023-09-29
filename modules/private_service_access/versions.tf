@@ -19,7 +19,7 @@ terraform {
   required_providers {
     null = {
       source  = "hashicorp/null"
-      version = "~> 3.1.0"
+      version = "~> 3.1"
     }
     google = {
       source  = "hashicorp/google"
@@ -32,11 +32,11 @@ terraform {
   }
 
   provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-sql-db:private_service_access/v9.0.0"
+    module_name = "blueprints/terraform/terraform-google-sql-db:private_service_access/v14.0.0"
   }
 
   provider_meta "google-beta" {
-    module_name = "blueprints/terraform/terraform-google-sql-db:private_service_access/v9.0.0"
+    module_name = "blueprints/terraform/terraform-google-sql-db:private_service_access/v14.0.0"
   }
 
 }

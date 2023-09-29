@@ -16,9 +16,10 @@
 
 locals {
   read_replica_ip_configuration = {
-    ipv4_enabled    = true
-    require_ssl     = false
-    private_network = null
+    ipv4_enabled       = true
+    require_ssl        = false
+    private_network    = null
+    allocated_ip_range = null
     authorized_networks = [
       {
         name  = "${var.project_id}-cidr"
@@ -55,15 +56,23 @@ module "mysql" {
   }
 
   ip_configuration = {
-    ipv4_enabled    = true
-    require_ssl     = true
-    private_network = null
+    ipv4_enabled       = true
+    require_ssl        = true
+    private_network    = null
+    allocated_ip_range = null
     authorized_networks = [
       {
         name  = "${var.project_id}-cidr"
         value = var.mysql_ha_external_ip_range
       },
     ]
+  }
+
+  password_validation_policy_config = {
+    enable_password_policy      = true
+    complexity                  = "COMPLEXITY_DEFAULT"
+    disallow_username_substring = true
+    min_length                  = 8
   }
 
   backup_configuration = {
@@ -78,42 +87,49 @@ module "mysql" {
 
   // Read replica configurations
   read_replica_name_suffix = "-test"
+  replica_database_version = "MYSQL_5_7"
   read_replicas = [
     {
-      name                = "0"
-      zone                = "us-central1-a"
-      tier                = "db-n1-standard-1"
-      ip_configuration    = local.read_replica_ip_configuration
-      database_flags      = [{ name = "long_query_time", value = 1 }]
-      disk_autoresize     = null
-      disk_size           = null
-      disk_type           = "PD_HDD"
-      user_labels         = { bar = "baz" }
-      encryption_key_name = null
+      name                  = "0"
+      zone                  = "us-central1-a"
+      availability_type     = "ZONAL"
+      tier                  = "db-n1-standard-1"
+      ip_configuration      = local.read_replica_ip_configuration
+      database_flags        = [{ name = "long_query_time", value = 1 }]
+      disk_autoresize       = null
+      disk_autoresize_limit = null
+      disk_size             = null
+      disk_type             = "PD_HDD"
+      user_labels           = { bar = "baz" }
+      encryption_key_name   = null
     },
     {
-      name                = "1"
-      zone                = "us-central1-b"
-      tier                = "db-n1-standard-1"
-      ip_configuration    = local.read_replica_ip_configuration
-      database_flags      = [{ name = "long_query_time", value = 1 }]
-      disk_autoresize     = null
-      disk_size           = null
-      disk_type           = "PD_HDD"
-      user_labels         = { bar = "baz" }
-      encryption_key_name = null
+      name                  = "1"
+      zone                  = "us-central1-b"
+      availability_type     = "ZONAL"
+      tier                  = "db-n1-standard-1"
+      ip_configuration      = local.read_replica_ip_configuration
+      database_flags        = [{ name = "long_query_time", value = 1 }]
+      disk_autoresize       = null
+      disk_autoresize_limit = null
+      disk_size             = null
+      disk_type             = "PD_HDD"
+      user_labels           = { bar = "baz" }
+      encryption_key_name   = null
     },
     {
-      name                = "2"
-      zone                = "us-central1-c"
-      tier                = "db-n1-standard-1"
-      ip_configuration    = local.read_replica_ip_configuration
-      database_flags      = [{ name = "long_query_time", value = 1 }]
-      disk_autoresize     = null
-      disk_size           = null
-      disk_type           = "PD_HDD"
-      user_labels         = { bar = "baz" }
-      encryption_key_name = null
+      name                  = "2"
+      zone                  = "us-central1-c"
+      availability_type     = "ZONAL"
+      tier                  = "db-n1-standard-1"
+      ip_configuration      = local.read_replica_ip_configuration
+      database_flags        = [{ name = "long_query_time", value = 1 }]
+      disk_autoresize       = null
+      disk_autoresize_limit = null
+      disk_size             = null
+      disk_type             = "PD_HDD"
+      user_labels           = { bar = "baz" }
+      encryption_key_name   = null
     },
   ]
 
@@ -130,20 +146,23 @@ module "mysql" {
   ]
 
   user_name     = "tftest"
-  user_password = "foobar"
+  user_password = "Example!12345"
+  root_password = ".5nHITPioEJk^k}="
 
   additional_users = [
     {
-      name     = "tftest2"
-      password = "abcdefg"
-      host     = "localhost"
-      type     = "BUILT_IN"
+      name            = "tftest2"
+      password        = "Example!12345"
+      host            = "localhost"
+      type            = "BUILT_IN"
+      random_password = false
     },
     {
-      name     = "tftest3"
-      password = "abcdefg"
-      host     = "localhost"
-      type     = "BUILT_IN"
+      name            = "tftest3"
+      password        = "Example!12345"
+      host            = "localhost"
+      type            = "BUILT_IN"
+      random_password = false
     },
   ]
 }

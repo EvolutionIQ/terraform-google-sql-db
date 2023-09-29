@@ -5,6 +5,165 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this
 project adheres to [Semantic Versioning](http://semver.org/).
 
+## [14.0.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v13.0.1...v14.0.0) (2023-01-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* Requires [Terraform](https://www.terraform.io/downloads.html) >= 1.3.0
+* Add pwd validation policy for mysql modules ([#409](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/409))
+* adds settings.deletion_protection_enabled to modules ([#404](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/404))
+* Aligned the behaviour of additional_users resource in all 3 Cloud SQL instance modules. ([#398](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/398))
+* Add ```deny_maintenance_period``` for MySQL, MsSQL, PostgreSQL and safer_sql ([#399](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/399))
+* removes instanceUser iam binding from the postgresql module ([#382](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/382))
+* Add Password Validation Policy to Postgres Module ([#376](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/376))
+* Add name_override variable for MySQL, PostgreSQL and safer_sql to Override default read replica name ([#393](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/393))
+
+### Features
+
+* Add ```deny_maintenance_period``` for MySQL, MsSQL, PostgreSQL and safer_sql ([#399](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/399)) ([55f4206](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/55f4206e6fbb4f1d241a12563b6296166b895833))
+* add `secondary_zone`, `follow_gae_application` to safer_mysql ([#390](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/390)) ([05cd2b6](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/05cd2b6983b0c88f3cbade94abdb1c74a0dc388c))
+* Add name_override variable for MySQL, PostgreSQL and safer_sql to Override default read replica name ([#393](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/393)) ([045bed1](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/045bed1d212aeb8e7ec8bf89896c74fffec38f8a))
+* Add Password Validation Policy to Postgres Module ([#376](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/376)) ([562455b](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/562455bf558c84cd856420374653c095d49b1f9c))
+* Add pwd validation policy for mysql modules ([#409](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/409)) ([df8accd](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/df8accdea3091883e8aef9a2896ffa6f7a09582a))
+* add Suffix to backup configurations ([#377](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/377)) ([0ea1968](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/0ea1968291957d3637724ebe8f69af48736a45e4))
+* adds deletion_policy parameter for google_sql_user and google_sql_database resource. ([#386](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/386)) ([8ab6e37](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/8ab6e374dd74a8c3f5d6963640f9eb945cd996f5))
+* adds settings.deletion_protection_enabled to modules ([#404](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/404)) ([af48cd3](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/af48cd39b510fa21b1c7c5b2a7a20b5085b04d57))
+* adds settings.location_preference.follow_gae_application parameter to modules. ([#385](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/385)) ([edefa43](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/edefa43e0b42f382fc2f9e96d8a28cefea473c98))
+* Aligned the behaviour of additional_users resource in all 3 Cloud SQL instance modules. ([#398](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/398)) ([7d6b209](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/7d6b2095f0e2312424c97a416dbb929d57c73eaa))
+
+
+### Bug Fixes
+
+* Added functionality to simply specify the database version number ins… ([#388](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/388)) ([83ca2e2](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/83ca2e2a2791325421162b68eafa6264a550ecfa))
+* Added sensitive field in output "primary" in mssql module ([#394](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/394)) ([4b32479](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/4b32479921fa85ce1a477ad1415032d795dc3953))
+* fixes lint issues and generates metadata ([#392](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/392)) ([dd1d75c](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/dd1d75cff8d21c16299a026edb88d3939daf99d1))
+* made 'allocated_ip_range' variable optional ([#395](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/395)) ([243c1c5](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/243c1c556b801505fb6c1e35dd5ffe23091bce0b))
+* removes instanceUser iam binding from the postgresql module ([#382](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/382)) ([cc39074](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/cc39074a0d6c9393be7fc05f9afd62bbc292ff4c))
+* sensitive output safer mysql ([#401](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/401)) ([5cc5e08](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/5cc5e08d575f16f1cf588bd7fd28f3e50b29647d))
+
+## [13.0.1](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v13.0.0...v13.0.1) (2022-11-11)
+
+
+### Bug Fixes
+
+* revert null provider version to major.minor ([#372](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/372)) ([b4c0555](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/b4c055536d4abe43d78590694dbc5605fd83d7ec))
+
+## [13.0.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v12.1.0...v13.0.0) (2022-11-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** update terraform null to ~> 3.2.0 (#366)
+* Make compression default for Backups
+* Adds `secondary_zone` to db modules
+
+### Features
+
+* Adds `secondary_zone` to db modules ([7818a7e](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/7818a7e85107e8cfb149ced278749909eeb68b32))
+* Support Query Insights for MySQL ([d932391](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/d932391484bb02d28b27618b75dda152cbd6dc90))
+
+
+### Bug Fixes
+
+* Db master and replica update solution for MYSQL ([f991c22](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/f991c22e618d77c280aa0aa496411a1df4ac8cb2))
+* Make compression default for Backups ([ff37244](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/ff3724429a04b54d25bfea6eb3db68d78d1128bb))
+* Postgresql availability type shouldn't prevent backup configuration ([#352](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/352)) ([e796b3c](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/e796b3cb44500bcc144fc28fc482111a461ad465)), closes [#351](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/351)
+* removed invalid parameter for PostgrSQL binary_log_enabled ([#341](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/341)) ([b51427e](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/b51427ed2fee415f8d5d301374f8106c33fd0a12))
+
+
+### Miscellaneous Chores
+
+* **deps:** update terraform null to ~&gt; 3.2.0 ([#366](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/366)) ([643e6e5](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/643e6e58c24560f936ee6bb0574cde17e080fb10))
+
+## [12.1.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v12.0.0...v12.1.0) (2022-10-07)
+
+
+### Features
+
+* Added cloud sql restore module that uses database import ([#343](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/343)) ([da4033b](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/da4033b0b2e12d66bbc3869d2be32096f2a685b8))
+
+
+### Bug Fixes
+
+* for_each issue on the sql_audit_config ([#340](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/340)) ([95e48a1](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/95e48a1473714fc5a5ba46b4dce69b21bb6e00d7))
+
+## [12.0.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v11.0.0...v12.0.0) (2022-08-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* Minimum Google Beta provider version increased to v4.28.0.
+* Change additional user default password (#332)
+* adds availability_type for read_replicas (#329)
+
+### Features
+
+* add support for settings.sql_server_audit_config setting ([64b8a18](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/64b8a186e19b2383e3b6f9b10e413fcc31814791))
+* adds availability_type for read_replicas ([#329](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/329)) ([e26861e](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/e26861e5736d7001994ef7e99e72b4ecf6fea22c))
+* Provide an option to compress backups for PostreSQL and MySQL ([#335](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/335)) ([b1ef34d](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/b1ef34d0ee1a84ef2c0be4141cb83448052264da))
+
+
+### Bug Fixes
+
+* Change additional user default password ([#332](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/332)) ([f96f71e](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/f96f71ed00e590a56083bb4faffc5b54e4583603))
+* set replicas output as sensitive pgsql ([#334](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/334)) ([ad6f427](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/ad6f427e2063d6174eb77670772ab7b3b2153c74))
+
+## [11.0.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v10.1.0...v11.0.0) (2022-06-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* Switch to random_password instead of random_id (#308)
+* Add support for setting disk_autoresize_limit (#288)
+* add support for settings.active_directory_config for SQL module (#305)
+
+### Features
+
+* Add sensitive flag for MySQL module outputs ([#303](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/303)) ([6a15c26](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/6a15c26de30d7eb652857e5d077c980969a02990))
+* Add support for setting disk_autoresize_limit ([#288](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/288)) ([e07f141](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/e07f14155e526ee205807bb85386a1bccce50c91))
+* add support for settings.active_directory_config for SQL module ([#305](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/305)) ([449f1a2](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/449f1a2dbb522cda93eae8a574345356db7497f2))
+* Switch to random_password instead of random_id ([#308](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/308)) ([9126ee6](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/9126ee6c38e085d922ce3e674b429d802577277a))
+
+## [10.1.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v10.0.2...v10.1.0) (2022-05-13)
+
+
+### Features
+
+* Add a description variable for google_compute_global_address resource ([#299](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/299)) ([fe91aa5](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/fe91aa5093c03b8cc823c2f1f43c18f0b9d0812a))
+* Create SQL Backup and export module ([#296](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/296)) ([c51bf29](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/c51bf296e392fca246aae1c9ba4299a5a97ef274))
+
+### [10.0.2](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v10.0.1...v10.0.2) (2022-04-19)
+
+
+### Bug Fixes
+
+* added sensitive flag ([#294](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/294)) ([17da833](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/17da8338e8f0f6658797648d758988c676cee88f))
+
+### [10.0.1](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v10.0.0...v10.0.1) (2022-03-16)
+
+
+### Bug Fixes
+
+* Add missing google-beta provider to required_providers ([#282](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/282)) ([714428c](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/714428cb50fc3a26caf8cb3e539d62ac092f67d1))
+* Ignore changes to CMEK on read replicas ([#284](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/284)) ([b73b465](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/b73b465baabb89112958fc23c414885c02628b48))
+
+## [10.0.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v9.0.0...v10.0.0) (2022-02-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* `allocated_ip_range` must now be specified for instances; `allocated_ip_range = null` can be used to preserve old default.
+
+### Features
+
+* Add allocated_ip_range property to CloudSQL modules ([#277](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/277)) ([ab8c768](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/ab8c76836668b31ccb3999ed0825dafebac27111))
+
+
+### Bug Fixes
+
+* Ignore changes to root_password ([#279](https://github.com/terraform-google-modules/terraform-google-sql-db/issues/279)) ([d8c9959](https://github.com/terraform-google-modules/terraform-google-sql-db/commit/d8c99593631b5f8336b90abee4d483a27b31ac4d))
+
 ## [9.0.0](https://github.com/terraform-google-modules/terraform-google-sql-db/compare/v8.0.0...v9.0.0) (2022-01-28)
 
 

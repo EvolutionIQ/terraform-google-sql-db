@@ -15,9 +15,7 @@
  */
 
 locals {
-  master_instance_name = var.random_instance_name ? "${var.name}-${random_id.suffix[0].hex}" : var.name
-
-  default_user_host        = "%"
+  master_instance_name     = var.random_instance_name ? "${var.name}-${random_id.suffix[0].hex}" : var.name
   ip_configuration_enabled = length(keys(var.ip_configuration)) > 0 ? true : false
 
   ip_configurations = {
@@ -50,11 +48,13 @@ resource "google_sql_database_instance" "default" {
   region              = var.region
   encryption_key_name = var.encryption_key_name
   deletion_protection = var.deletion_protection
+  root_password       = var.root_password != "" ? var.root_password : null
 
   settings {
-    tier              = var.tier
-    activation_policy = var.activation_policy
-    availability_type = var.availability_type
+    tier                        = var.tier
+    activation_policy           = var.activation_policy
+    availability_type           = var.availability_type
+    deletion_protection_enabled = var.deletion_protection_enabled
     dynamic "backup_configuration" {
       for_each = [var.backup_configuration]
       content {
@@ -73,12 +73,41 @@ resource "google_sql_database_instance" "default" {
         }
       }
     }
+    dynamic "insights_config" {
+      for_each = var.insights_config != null ? [var.insights_config] : []
+
+      content {
+        query_insights_enabled  = true
+        query_string_length     = lookup(insights_config.value, "query_string_length", 1024)
+        record_application_tags = lookup(insights_config.value, "record_application_tags", false)
+        record_client_address   = lookup(insights_config.value, "record_client_address", false)
+      }
+    }
+    dynamic "deny_maintenance_period" {
+      for_each = var.deny_maintenance_period
+      content {
+        end_date   = lookup(deny_maintenance_period.value, "end_date", null)
+        start_date = lookup(deny_maintenance_period.value, "start_date", null)
+        time       = lookup(deny_maintenance_period.value, "time", null)
+      }
+    }
+    dynamic "password_validation_policy" {
+      for_each = var.password_validation_policy_config != null ? [var.password_validation_policy_config] : []
+
+      content {
+        enable_password_policy      = lookup(password_validation_policy.value, "enable_password_policy", null)
+        min_length                  = lookup(password_validation_policy.value, "min_length", null)
+        complexity                  = lookup(password_validation_policy.value, "complexity", null)
+        disallow_username_substring = lookup(password_validation_policy.value, "disallow_username_substring", null)
+      }
+    }
     dynamic "ip_configuration" {
       for_each = [local.ip_configurations[local.ip_configuration_enabled ? "enabled" : "disabled"]]
       content {
-        ipv4_enabled    = lookup(ip_configuration.value, "ipv4_enabled", null)
-        private_network = lookup(ip_configuration.value, "private_network", null)
-        require_ssl     = lookup(ip_configuration.value, "require_ssl", null)
+        ipv4_enabled       = lookup(ip_configuration.value, "ipv4_enabled", null)
+        private_network    = lookup(ip_configuration.value, "private_network", null)
+        require_ssl        = lookup(ip_configuration.value, "require_ssl", null)
+        allocated_ip_range = lookup(ip_configuration.value, "allocated_ip_range", null)
 
         dynamic "authorized_networks" {
           for_each = lookup(ip_configuration.value, "authorized_networks", [])
@@ -91,7 +120,8 @@ resource "google_sql_database_instance" "default" {
       }
     }
 
-    disk_autoresize = var.disk_autoresize
+    disk_autoresize       = var.disk_autoresize
+    disk_autoresize_limit = var.disk_autoresize_limit
 
     disk_size    = var.disk_size
     disk_type    = var.disk_type
@@ -106,7 +136,9 @@ resource "google_sql_database_instance" "default" {
     }
 
     location_preference {
-      zone = var.zone
+      zone                   = var.zone
+      secondary_zone         = var.secondary_zone
+      follow_gae_application = var.follow_gae_application
     }
 
     maintenance_window {
@@ -151,23 +183,24 @@ resource "google_sql_database" "additional_databases" {
   depends_on = [null_resource.module_depends_on, google_sql_database_instance.default]
 }
 
-resource "random_id" "user-password" {
+resource "random_password" "user-password" {
   keepers = {
     name = google_sql_database_instance.default.name
   }
 
-  byte_length = 8
-  depends_on  = [null_resource.module_depends_on, google_sql_database_instance.default]
+  length     = 32
+  special    = var.enable_random_password_special
+  depends_on = [null_resource.module_depends_on, google_sql_database_instance.default]
 }
 
-resource "random_id" "additional_passwords" {
+resource "random_password" "additional_passwords" {
   for_each = local.users
   keepers = {
     name = google_sql_database_instance.default.name
   }
-
-  byte_length = 8
-  depends_on  = [null_resource.module_depends_on, google_sql_database_instance.default]
+  length     = 32
+  special    = var.enable_random_password_special
+  depends_on = [null_resource.module_depends_on, google_sql_database_instance.default]
 }
 
 resource "google_sql_user" "default" {
@@ -176,7 +209,7 @@ resource "google_sql_user" "default" {
   project  = var.project_id
   instance = google_sql_database_instance.default.name
   host     = var.user_host
-  password = var.user_password == "" ? random_id.user-password.hex : var.user_password
+  password = var.user_password == "" ? random_password.user-password.result : var.user_password
   depends_on = [
     null_resource.module_depends_on,
     google_sql_database_instance.default,
@@ -188,10 +221,10 @@ resource "google_sql_user" "additional_users" {
   for_each = local.users
   project  = var.project_id
   name     = each.value.name
-  password = lookup(each.value, "password", random_id.user-password.hex)
-  host     = lookup(each.value, "host", var.user_host)
+  password = each.value.random_password ? random_password.additional_passwords[each.value.name].result : each.value.password
+  host     = each.value.host == null ? var.user_host : each.value.host
   instance = google_sql_database_instance.default.name
-  type     = lookup(each.value, "type", "BUILT_IN")
+  type     = coalesce(each.value.type, "BUILT_IN")
   depends_on = [
     null_resource.module_depends_on,
     google_sql_database_instance.default,

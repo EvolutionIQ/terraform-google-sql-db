@@ -93,7 +93,7 @@ output "read_replica_instance_names" {
 
 output "generated_user_password" {
   description = "The auto generated default user password if not input password was provided"
-  value       = random_id.user-password.hex
+  value       = random_password.user-password.result
   sensitive   = true
 }
 
@@ -108,18 +108,26 @@ output "additional_users" {
   sensitive = true
 }
 
+output "iam_user_emails" {
+  description = "The list of the IAM users with the access to the Cloudsql instance"
+  value       = var.iam_user_emails
+}
+
 // Resources
 output "primary" {
   value       = google_sql_database_instance.default
   description = "The `google_sql_database_instance` resource representing the primary instance"
+  sensitive   = true
 }
 
 output "replicas" {
   value       = values(google_sql_database_instance.replicas)
   description = "A list of `google_sql_database_instance` resources representing the replicas"
+  sensitive   = true
 }
 
 output "instances" {
   value       = concat([google_sql_database_instance.default], values(google_sql_database_instance.replicas))
   description = "A list of all `google_sql_database_instance` resources we've created"
+  sensitive   = true
 }

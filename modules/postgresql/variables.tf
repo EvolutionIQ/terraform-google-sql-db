@@ -34,6 +34,11 @@ variable "random_instance_name" {
 variable "database_version" {
   description = "The database version to use"
   type        = string
+
+  validation {
+    condition     = (length(var.database_version) >= 9 && ((upper(substr(var.database_version, 0, 9)) == "POSTGRES_") && can(regex("^\\d+(?:_?\\d)*$", substr(var.database_version, 9, -1))))) || can(regex("^\\d+(?:_?\\d)*$", var.database_version))
+    error_message = "The specified database version is not a valid representaion of database version. Valid database versions should be like the following patterns:- \"9_6\", \"postgres_9_6\" or \"POSTGRES_14\"."
+  }
 }
 
 // required
@@ -54,6 +59,18 @@ variable "zone" {
   description = "The zone for the master instance, it should be something like: `us-central1-a`, `us-east1-c`."
 }
 
+variable "secondary_zone" {
+  type        = string
+  description = "The preferred zone for the secondary/failover instance, it should be something like: `us-central1-a`, `us-east1-c`."
+  default     = null
+}
+
+variable "follow_gae_application" {
+  type        = string
+  description = "A Google App Engine application whose zone to remain in. Must be in the same region as this instance."
+  default     = null
+}
+
 variable "activation_policy" {
   description = "The activation policy for the master instance.Can be either `ALWAYS`, `NEVER` or `ON_DEMAND`."
   type        = string
@@ -66,14 +83,27 @@ variable "availability_type" {
   default     = "ZONAL"
 }
 
+variable "deletion_protection_enabled" {
+  description = "Enables protection of an instance from accidental deletion protection across all surfaces (API, gcloud, Cloud Console and Terraform)."
+  type        = bool
+  default     = false
+}
+
 variable "disk_autoresize" {
   description = "Configuration to increase storage size."
   type        = bool
   default     = true
 }
 
+variable "disk_autoresize_limit" {
+  description = "The maximum size to which storage can be auto increased."
+  type        = number
+  default     = 0
+}
+
 variable "disk_size" {
   description = "The disk size for the master instance."
+  type        = number
   default     = 10
 }
 
@@ -122,6 +152,16 @@ variable "user_labels" {
   default     = {}
 }
 
+variable "deny_maintenance_period" {
+  description = "The Deny Maintenance Period fields to prevent automatic maintenance from occurring during a 90-day time period. See [more details](https://cloud.google.com/sql/docs/postgres/maintenance)"
+  type = list(object({
+    end_date   = string
+    start_date = string
+    time       = string
+  }))
+  default = []
+}
+
 variable "backup_configuration" {
   description = "The backup_configuration settings subblock for the database setings"
   type = object({
@@ -154,6 +194,18 @@ variable "insights_config" {
   default = null
 }
 
+variable "password_validation_policy_config" {
+  description = "The password validation policy settings for the database instance."
+  type = object({
+    min_length                  = number
+    complexity                  = string
+    reuse_interval              = number
+    disallow_username_substring = bool
+    password_change_interval    = string
+  })
+  default = null
+}
+
 variable "ip_configuration" {
   description = "The ip configuration for the master instances."
   type = object({
@@ -161,12 +213,14 @@ variable "ip_configuration" {
     ipv4_enabled        = bool
     private_network     = string
     require_ssl         = bool
+    allocated_ip_range  = string
   })
   default = {
     authorized_networks = []
     ipv4_enabled        = true
     private_network     = null
     require_ssl         = null
+    allocated_ip_range  = null
   }
 }
 
@@ -174,13 +228,16 @@ variable "ip_configuration" {
 variable "read_replicas" {
   description = "List of read replicas to create. Encryption key is required for replica in different region. For replica in same region as master set encryption_key_name = null"
   type = list(object({
-    name            = string
-    tier            = string
-    zone            = string
-    disk_type       = string
-    disk_autoresize = bool
-    disk_size       = string
-    user_labels     = map(string)
+    name                  = string
+    name_override         = optional(string)
+    tier                  = string
+    availability_type     = string
+    zone                  = string
+    disk_type             = string
+    disk_autoresize       = bool
+    disk_autoresize_limit = number
+    disk_size             = string
+    user_labels           = map(string)
     database_flags = list(object({
       name  = string
       value = string
@@ -190,6 +247,7 @@ variable "read_replicas" {
       ipv4_enabled        = bool
       private_network     = string
       require_ssl         = bool
+      allocated_ip_range  = string
     })
     encryption_key_name = string
   }))
@@ -243,12 +301,17 @@ variable "user_password" {
 }
 
 variable "additional_users" {
-  description = "A list of users to be created in your cluster"
+  description = "A list of users to be created in your cluster. A random password would be set for the user if the `random_password` variable is set."
   type = list(object({
-    name     = string
-    password = string
+    name            = string
+    password        = string
+    random_password = bool
   }))
   default = []
+  validation {
+    condition     = length([for user in var.additional_users : false if(user.random_password == false && (user.password == null || user.password == "")) || (user.random_password == true && (user.password != null && user.password != ""))]) == 0
+    error_message = "Password is a requird field for built_in Postgres users and you cannot set both password and random_password, choose one of them."
+  }
 }
 
 variable "iam_user_emails" {
@@ -309,4 +372,22 @@ variable "enable_default_user" {
   description = "Enable or disable the creation of the default user"
   type        = bool
   default     = true
+}
+
+variable "database_deletion_policy" {
+  description = "The deletion policy for the database. Setting ABANDON allows the resource to be abandoned rather than deleted. This is useful for Postgres, where databases cannot be deleted from the API if there are users other than cloudsqlsuperuser with access. Possible values are: \"ABANDON\"."
+  type        = string
+  default     = null
+}
+
+variable "user_deletion_policy" {
+  description = "The deletion policy for the user. Setting ABANDON allows the resource to be abandoned rather than deleted. This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles. Possible values are: \"ABANDON\"."
+  type        = string
+  default     = null
+}
+
+variable "enable_random_password_special" {
+  description = "Enable special characters in generated random passwords."
+  type        = bool
+  default     = false
 }

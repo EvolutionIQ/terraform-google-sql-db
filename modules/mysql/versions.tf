@@ -15,24 +15,31 @@
  */
 
 terraform {
-  required_version = ">= 0.13"
+  required_version = ">= 1.3"
   required_providers {
     null = {
       source  = "hashicorp/null"
-      version = "~> 3.1.0"
+      version = "~> 3.1"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.1.0"
+      version = "~> 3.1"
     }
     google = {
       source  = "hashicorp/google"
-      version = ">= 3.60, < 5.0"
+      version = ">= 4.48.0, < 5.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = ">= 4.48.0, < 5.0"
     }
   }
 
   provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-sql-db:mysql/v9.0.0"
+    module_name = "blueprints/terraform/terraform-google-sql-db:mysql/v14.0.0"
+  }
+  provider_meta "google-beta" {
+    module_name = "blueprints/terraform/terraform-google-sql-db:mysql/v14.0.0"
   }
 
 }

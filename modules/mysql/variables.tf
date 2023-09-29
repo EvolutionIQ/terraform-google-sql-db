@@ -30,6 +30,12 @@ variable "random_instance_name" {
   default     = false
 }
 
+variable "replica_database_version" {
+  description = "The read replica database version to use. This var should only be used during a database update. The update sequence 1. read-replica 2. master, setting this to an updated version will cause the replica to update, then you may update the master with the var database_version and remove this field after update is complete"
+  type        = string
+  default     = ""
+}
+
 // required
 variable "database_version" {
   description = "The database version to use"
@@ -55,6 +61,18 @@ variable "zone" {
   type        = string
 }
 
+variable "secondary_zone" {
+  type        = string
+  description = "The preferred zone for the secondary/failover instance, it should be something like: `us-central1-a`, `us-east1-c`."
+  default     = null
+}
+
+variable "follow_gae_application" {
+  type        = string
+  description = "A Google App Engine application whose zone to remain in. Must be in the same region as this instance."
+  default     = null
+}
+
 variable "activation_policy" {
   description = "The activation policy for the master instance. Can be either `ALWAYS`, `NEVER` or `ON_DEMAND`."
   type        = string
@@ -67,10 +85,22 @@ variable "availability_type" {
   default     = "REGIONAL"
 }
 
+variable "deletion_protection_enabled" {
+  description = "Enables protection of an instance from accidental deletion protection across all surfaces (API, gcloud, Cloud Console and Terraform)."
+  type        = bool
+  default     = false
+}
+
 variable "disk_autoresize" {
   description = "Configuration to increase storage size"
   type        = bool
   default     = true
+}
+
+variable "disk_autoresize_limit" {
+  description = "The maximum size to which storage can be auto increased."
+  type        = number
+  default     = 0
 }
 
 variable "disk_size" {
@@ -125,6 +155,16 @@ variable "user_labels" {
   description = "The key/value labels for the master instances."
 }
 
+variable "deny_maintenance_period" {
+  description = "The Deny Maintenance Period fields to prevent automatic maintenance from occurring during a 90-day time period. See [more details](https://cloud.google.com/sql/docs/mysql/maintenance)"
+  type = list(object({
+    end_date   = string
+    start_date = string
+    time       = string
+  }))
+  default = []
+}
+
 variable "backup_configuration" {
   description = "The backup_configuration settings subblock for the database setings"
   type = object({
@@ -147,6 +187,16 @@ variable "backup_configuration" {
   }
 }
 
+variable "insights_config" {
+  description = "The insights_config settings for the database."
+  type = object({
+    query_string_length     = number
+    record_application_tags = bool
+    record_client_address   = bool
+  })
+  default = null
+}
+
 variable "ip_configuration" {
   description = "The ip_configuration settings subblock"
   type = object({
@@ -154,26 +204,42 @@ variable "ip_configuration" {
     ipv4_enabled        = bool
     private_network     = string
     require_ssl         = bool
+    allocated_ip_range  = string
   })
   default = {
     authorized_networks = []
     ipv4_enabled        = true
     private_network     = null
     require_ssl         = null
+    allocated_ip_range  = null
   }
+}
+
+variable "password_validation_policy_config" {
+  description = "The password validation policy settings for the database instance."
+  type = object({
+    enable_password_policy      = bool
+    min_length                  = number
+    complexity                  = string
+    disallow_username_substring = bool
+  })
+  default = null
 }
 
 // Read Replicas
 variable "read_replicas" {
   description = "List of read replicas to create. Encryption key is required for replica in different region. For replica in same region as master set encryption_key_name = null"
   type = list(object({
-    name            = string
-    tier            = string
-    zone            = string
-    disk_type       = string
-    disk_autoresize = bool
-    disk_size       = string
-    user_labels     = map(string)
+    name                  = string
+    name_override         = optional(string)
+    tier                  = string
+    zone                  = string
+    availability_type     = string
+    disk_type             = string
+    disk_autoresize       = bool
+    disk_autoresize_limit = number
+    disk_size             = string
+    user_labels           = map(string)
     database_flags = list(object({
       name  = string
       value = string
@@ -183,6 +249,7 @@ variable "read_replicas" {
       ipv4_enabled        = bool
       private_network     = string
       require_ssl         = bool
+      allocated_ip_range  = string
     })
     encryption_key_name = string
   }))
@@ -235,6 +302,12 @@ variable "user_host" {
   default     = "%"
 }
 
+variable "root_password" {
+  description = "Mysql password for the root user. If not set, a random one will be generated and available in the root_password output variable."
+  type        = string
+  default     = ""
+}
+
 variable "user_password" {
   description = "The password for the default user. If not set, a random one will be generated and available in the generated_user_password output variable."
   type        = string
@@ -242,9 +315,19 @@ variable "user_password" {
 }
 
 variable "additional_users" {
-  description = "A list of users to be created in your cluster"
-  type        = list(map(any))
-  default     = []
+  description = "A list of users to be created in your cluster. A random password would be set for the user if the `random_password` variable is set."
+  type = list(object({
+    name            = string
+    password        = string
+    random_password = bool
+    type            = string
+    host            = string
+  }))
+  default = []
+  validation {
+    condition     = length([for user in var.additional_users : false if user.random_password == true && (user.password != null && user.password != "")]) == 0
+    error_message = "You cannot set both password and random_password, choose one of them."
+  }
 }
 
 variable "create_timeout" {
@@ -299,4 +382,10 @@ variable "enable_default_user" {
   description = "Enable or disable the creation of the default user"
   type        = bool
   default     = true
+}
+
+variable "enable_random_password_special" {
+  description = "Enable special characters in generated random passwords."
+  type        = bool
+  default     = false
 }

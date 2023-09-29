@@ -24,7 +24,7 @@ resource "google_sql_database_instance" "replicas" {
   provider             = google-beta
   for_each             = local.replicas
   project              = var.project_id
-  name                 = "${local.master_instance_name}-replica${var.read_replica_name_suffix}${each.value.name}"
+  name                 = each.value.name_override == null || each.value.name_override == "" ? "${local.master_instance_name}-replica${var.read_replica_name_suffix}${each.value.name}" : each.value.name_override
   database_version     = var.database_version
   region               = join("-", slice(split("-", lookup(each.value, "zone", var.zone)), 0, 2))
   master_instance_name = google_sql_database_instance.default.name
@@ -38,13 +38,15 @@ resource "google_sql_database_instance" "replicas" {
   settings {
     tier              = lookup(each.value, "tier", var.tier)
     activation_policy = "ALWAYS"
+    availability_type = lookup(each.value, "availability_type", var.availability_type)
 
     dynamic "ip_configuration" {
       for_each = [lookup(each.value, "ip_configuration", {})]
       content {
-        ipv4_enabled    = lookup(ip_configuration.value, "ipv4_enabled", null)
-        private_network = lookup(ip_configuration.value, "private_network", null)
-        require_ssl     = lookup(ip_configuration.value, "require_ssl", null)
+        ipv4_enabled       = lookup(ip_configuration.value, "ipv4_enabled", null)
+        private_network    = lookup(ip_configuration.value, "private_network", null)
+        require_ssl        = lookup(ip_configuration.value, "require_ssl", null)
+        allocated_ip_range = lookup(ip_configuration.value, "allocated_ip_range", null)
 
         dynamic "authorized_networks" {
           for_each = lookup(ip_configuration.value, "authorized_networks", [])
@@ -67,11 +69,25 @@ resource "google_sql_database_instance" "replicas" {
       }
     }
 
-    disk_autoresize = lookup(each.value, "disk_autoresize", var.disk_autoresize)
-    disk_size       = lookup(each.value, "disk_size", var.disk_size)
-    disk_type       = lookup(each.value, "disk_type", var.disk_type)
-    pricing_plan    = "PER_USE"
-    user_labels     = lookup(each.value, "user_labels", var.user_labels)
+    dynamic "password_validation_policy" {
+      for_each = var.password_validation_policy_config != null ? [var.password_validation_policy_config] : []
+
+      content {
+        enable_password_policy      = true
+        min_length                  = lookup(password_validation_policy.value, "min_length", 8)
+        complexity                  = lookup(password_validation_policy.value, "complexity", "COMPLEXITY_DEFAULT")
+        reuse_interval              = lookup(password_validation_policy.value, "reuse_interval", null)
+        disallow_username_substring = lookup(password_validation_policy.value, "disallow_username_substring", true)
+        password_change_interval    = lookup(password_validation_policy.value, "password_change_interval", null)
+      }
+    }
+
+    disk_autoresize       = lookup(each.value, "disk_autoresize", var.disk_autoresize)
+    disk_autoresize_limit = lookup(each.value, "disk_autoresize_limit", var.disk_autoresize_limit)
+    disk_size             = lookup(each.value, "disk_size", var.disk_size)
+    disk_type             = lookup(each.value, "disk_type", var.disk_type)
+    pricing_plan          = "PER_USE"
+    user_labels           = lookup(each.value, "user_labels", var.user_labels)
 
     dynamic "database_flags" {
       for_each = lookup(each.value, "database_flags", [])
@@ -93,6 +109,7 @@ resource "google_sql_database_instance" "replicas" {
     ignore_changes = [
       settings[0].disk_size,
       settings[0].maintenance_window,
+      encryption_key_name,
     ]
   }
 

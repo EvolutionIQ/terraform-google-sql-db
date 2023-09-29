@@ -15,17 +15,17 @@
  */
 
 terraform {
-  required_version = ">= 0.13"
+  required_version = ">= 1.3"
   required_providers {
 
     google = {
       source  = "hashicorp/google"
-      version = ">= 3.60, < 5.0"
+      version = ">= 4.48.0, < 5.0"
     }
   }
 
   provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-sql-db:safer_mysql/v9.0.0"
+    module_name = "blueprints/terraform/terraform-google-sql-db:safer_mysql/v14.0.0"
   }
 
 }

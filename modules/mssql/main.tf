@@ -51,9 +51,10 @@ resource "google_sql_database_instance" "default" {
   deletion_protection = var.deletion_protection
 
   settings {
-    tier              = var.tier
-    activation_policy = var.activation_policy
-    availability_type = var.availability_type
+    tier                        = var.tier
+    activation_policy           = var.activation_policy
+    availability_type           = var.availability_type
+    deletion_protection_enabled = var.deletion_protection_enabled
     dynamic "backup_configuration" {
       for_each = var.backup_configuration.enabled ? [var.backup_configuration] : []
       content {
@@ -72,12 +73,21 @@ resource "google_sql_database_instance" "default" {
         }
       }
     }
+    dynamic "deny_maintenance_period" {
+      for_each = var.deny_maintenance_period
+      content {
+        end_date   = lookup(deny_maintenance_period.value, "end_date", null)
+        start_date = lookup(deny_maintenance_period.value, "start_date", null)
+        time       = lookup(deny_maintenance_period.value, "time", null)
+      }
+    }
     dynamic "ip_configuration" {
       for_each = [local.ip_configurations[local.ip_configuration_enabled ? "enabled" : "disabled"]]
       content {
-        ipv4_enabled    = lookup(ip_configuration.value, "ipv4_enabled", null)
-        private_network = lookup(ip_configuration.value, "private_network", null)
-        require_ssl     = lookup(ip_configuration.value, "require_ssl", null)
+        ipv4_enabled       = lookup(ip_configuration.value, "ipv4_enabled", null)
+        private_network    = lookup(ip_configuration.value, "private_network", null)
+        require_ssl        = lookup(ip_configuration.value, "require_ssl", null)
+        allocated_ip_range = lookup(ip_configuration.value, "allocated_ip_range", null)
 
         dynamic "authorized_networks" {
           for_each = lookup(ip_configuration.value, "authorized_networks", [])
@@ -90,10 +100,11 @@ resource "google_sql_database_instance" "default" {
       }
     }
 
-    disk_autoresize = var.disk_autoresize
-    disk_size       = var.disk_size
-    disk_type       = var.disk_type
-    pricing_plan    = var.pricing_plan
+    disk_autoresize       = var.disk_autoresize
+    disk_autoresize_limit = var.disk_autoresize_limit
+    disk_size             = var.disk_size
+    disk_type             = var.disk_type
+    pricing_plan          = var.pricing_plan
     dynamic "database_flags" {
       for_each = var.database_flags
       content {
@@ -101,11 +112,28 @@ resource "google_sql_database_instance" "default" {
         value = lookup(database_flags.value, "value", null)
       }
     }
+    dynamic "active_directory_config" {
+      for_each = var.active_directory_config
+      content {
+        domain = lookup(var.active_directory_config, "domain", null)
+      }
+    }
+
+    dynamic "sql_server_audit_config" {
+      for_each = length(var.sql_server_audit_config) != 0 ? [var.sql_server_audit_config] : []
+      content {
+        bucket             = lookup(var.sql_server_audit_config, "bucket", null)
+        upload_interval    = lookup(var.sql_server_audit_config, "upload_interval", null)
+        retention_interval = lookup(var.sql_server_audit_config, "retention_interval", null)
+      }
+    }
 
     user_labels = var.user_labels
 
     location_preference {
-      zone = var.zone
+      zone                   = var.zone
+      secondary_zone         = var.secondary_zone
+      follow_gae_application = var.follow_gae_application
     }
 
     maintenance_window {
@@ -117,7 +145,8 @@ resource "google_sql_database_instance" "default" {
 
   lifecycle {
     ignore_changes = [
-      settings[0].disk_size
+      settings[0].disk_size,
+      root_password
     ]
   }
 
@@ -156,8 +185,11 @@ resource "random_password" "user-password" {
 }
 
 resource "random_password" "additional_passwords" {
-  for_each   = local.users
-  length     = 8
+  for_each = local.users
+  keepers = {
+    name = google_sql_database_instance.default.name
+  }
+  length     = 32
   special    = true
   depends_on = [null_resource.module_depends_on, google_sql_database_instance.default]
 }
