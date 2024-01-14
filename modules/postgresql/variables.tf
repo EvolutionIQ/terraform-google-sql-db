@@ -158,9 +158,13 @@ variable "ip_configuration" {
   description = "The ip configuration for the master instances."
   type = object({
     authorized_networks = list(map(string))
-    ipv4_enabled        = bool
-    private_network     = string
-    require_ssl         = bool
+    psc_config = optional(object({
+      enabled                   = bool
+      allowed_consumer_projects = list(string)
+    }))
+    ipv4_enabled    = bool
+    private_network = string
+    require_ssl     = bool
   })
   default = {
     authorized_networks = []

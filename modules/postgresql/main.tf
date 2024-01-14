@@ -89,6 +89,14 @@ resource "google_sql_database_instance" "default" {
             value           = lookup(authorized_networks.value, "value", null)
           }
         }
+
+        dynamic "psc_config" {
+          for_each = lookup(ip_configuration.value, "psc_config", [])
+          content {
+            psc_enabled               = lookup(psc_config.value, "enabled", null)
+            allowed_consumer_projects = lookup(psc_config.value, "allowed_consumer_projects", [])
+          }
+        }
       }
     }
     dynamic "insights_config" {
