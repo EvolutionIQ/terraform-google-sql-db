@@ -168,6 +168,7 @@ variable "ip_configuration" {
   })
   default = {
     authorized_networks = []
+    psc_config          = {}
     ipv4_enabled        = true
     private_network     = null
     require_ssl         = null
