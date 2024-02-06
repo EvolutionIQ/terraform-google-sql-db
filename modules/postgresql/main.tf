@@ -192,11 +192,12 @@ resource "google_sql_user" "default" {
 }
 
 resource "google_sql_user" "additional_users" {
-  for_each = local.users
-  project  = var.project_id
-  name     = each.value.name
-  password = coalesce(each.value["password"], random_id.additional_passwords[each.value.name].hex)
-  instance = google_sql_database_instance.default.name
+  for_each        = local.users
+  project         = var.project_id
+  name            = each.value.name
+  password        = coalesce(each.value["password"], random_id.additional_passwords[each.value.name].hex)
+  instance        = google_sql_database_instance.default.name
+  deletion_policy = var.sql_iam_users_deletion_policy
   depends_on = [
     null_resource.module_depends_on,
     google_sql_database_instance.default,
