@@ -216,8 +216,9 @@ resource "google_sql_user" "iam_account" {
     ) : (
     each.value.email
   )
-  instance = google_sql_database_instance.default.name
-  type     = each.value.is_account_sa ? "CLOUD_IAM_SERVICE_ACCOUNT" : "CLOUD_IAM_USER"
+  instance        = google_sql_database_instance.default.name
+  type            = each.value.is_account_sa ? "CLOUD_IAM_SERVICE_ACCOUNT" : "CLOUD_IAM_USER"
+  deletion_policy = var.sql_iam_users_deletion_policy
 
   depends_on = [
     null_resource.module_depends_on,
